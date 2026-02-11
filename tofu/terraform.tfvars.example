@@ -1,0 +1,18 @@
+# Example Terraform variables for local development
+# Copy this file to `terraform.tfvars` and fill in real values.
+# Do NOT commit `terraform.tfvars` with real secrets.
+
+proxmox_api_url = "https://192.168.1.100:8006/api2/json"
+
+# Proxmox token id in the form user@pve!tokenname
+proxmox_token_id = "terraform-user@pve!tofu-token"
+
+# Proxmox token secret (sensitive)
+proxmox_secret = "your-secret-token-here"
+
+# Proxmox node to deploy to
+target_node = "pve"
+
+# VM configuration
+vm_name = "ubuntu-server-tofu"
+vm_id = 8000

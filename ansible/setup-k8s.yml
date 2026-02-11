@@ -1,0 +1,7 @@
+---
+- name: Configure Kubernetes Nodes
+  hosts: k8s_nodes
+  become: yes
+  roles:
+    - common
+    - k8s

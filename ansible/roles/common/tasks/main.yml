@@ -1,0 +1,29 @@
+---
+- name: Update apt and install basic packages
+  apt:
+    update_cache: yes
+    name:
+      - curl
+      - apt-transport-https
+      - ca-certificates
+      - software-properties-common
+      - qemu-guest-agent
+      - vim
+      - net-tools
+    state: present
+
+- name: Enable and start QEMU Guest Agent
+  systemd:
+    name: qemu-guest-agent
+    state: started
+    enabled: yes
+
+- name: Disable SWAP (required for Kubernetes)
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+
+- name: Remove SWAP from /etc/fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: "swap"
+    state: absent

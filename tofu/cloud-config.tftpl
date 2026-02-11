@@ -1,0 +1,31 @@
+#cloud-config
+users:
+  - default
+  - name: ubuntu
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_authorized_keys:
+      - ${ssh_key}
+    lock_passwd: false
+  - name: root
+    ssh_authorized_keys:
+      - ${ssh_key}
+    lock_passwd: false
+
+chpasswd:
+  list: |
+    ubuntu:ChangeMe123!
+    root:ChangeMe123!
+  expire: False
+
+package_update: true
+package_upgrade: true
+packages:
+  - qemu-guest-agent
+
+runcmd:
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+  - sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin prohibit-password/g' /etc/ssh/sshd_config
+  - systemctl restart ssh

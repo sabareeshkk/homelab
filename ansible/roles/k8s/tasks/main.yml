@@ -1,0 +1,40 @@
+---
+- name: Create containerd config directory
+  file:
+    path: /etc/containerd
+    state: directory
+
+- name: Install containerd
+  apt:
+    name: containerd
+    state: present
+
+- name: Add Kubernetes apt-key
+  get_url:
+    url: https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key
+    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+    mode: "0644"
+
+- name: Add Kubernetes apt repository
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /"
+    state: present
+    filename: kubernetes
+
+- name: Install Kubernetes components
+  apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: present
+    update_cache: yes
+
+- name: Hold Kubernetes packages
+  dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  with_items:
+    - kubelet
+    - kubeadm
+    - kubectl
