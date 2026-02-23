@@ -7,7 +7,7 @@ output "vm_ids" {
 }
 
 output "vm_ips" {
-  value       = { for k, v in proxmox_virtual_environment_vm.nodes : k => v.ipv4_addresses }
+  value       = { for k, node in var.vm_nodes : k => [[split("/", node.ip_address)[0]]] }
   description = "The IPv4 addresses of the VMs"
 }
 

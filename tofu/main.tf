@@ -54,7 +54,7 @@ resource "proxmox_virtual_environment_vm" "nodes" {
   initialization {
     user_account {
       username = var.vm_user
-      keys     = [trimspace(file("~/.ssh/id_rsa.pub"))]
+      keys     = [trimspace(file(var.ssh_public_key_path))]
       password = var.vm_password
     }
 

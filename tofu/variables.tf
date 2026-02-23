@@ -19,7 +19,7 @@ variable "vm_nodes" {
       name        = "k8s-master-01"
       vm_id       = 9001
       cpu_cores   = 2
-      memory      = 2048
+      memory      = 4096
       ip_address  = "101.101.0.100/24"
       target_node = "venus"
     }
@@ -27,7 +27,7 @@ variable "vm_nodes" {
       name        = "k8s-worker-01"
       vm_id       = 9002
       cpu_cores   = 2
-      memory      = 2048
+      memory      = 4096
       ip_address  = "101.101.0.101/24"
       target_node = "mars"
     }
@@ -35,7 +35,7 @@ variable "vm_nodes" {
       name        = "k8s-worker-02"
       vm_id       = 9003
       cpu_cores   = 2
-      memory      = 2048
+      memory      = 4096
       ip_address  = "101.101.0.102/24"
       target_node = "mercury"
     }
@@ -52,4 +52,10 @@ variable "vm_user" {
   type        = string
   description = "The username for the VM"
   default     = "root"
+}
+
+variable "ssh_public_key_path" {
+  type = string
+  description = "The ssh public key path"
+  default = "~/.ssh/id_rsa.pub"
 }
