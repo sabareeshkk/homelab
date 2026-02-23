@@ -1,0 +1,12 @@
+---
+- name: Initialize Master Node
+  hosts: master
+  become: yes
+  roles:
+    - master
+
+- name: Join Worker Nodes
+  hosts: workers
+  become: yes
+  roles:
+    - workers

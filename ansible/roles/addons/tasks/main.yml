@@ -1,0 +1,37 @@
+---
+- name: Install Pip3
+  apt:
+    name: python3-pip
+    state: present
+
+- name: Install Python libraries for Kubernetes
+  apt:
+    name:
+      - python3-kubernetes
+      - python3-yaml
+    state: present
+
+- name: Add ArgoCD Helm repository
+  command: /usr/local/bin/helm repo add argo https://argoproj.github.io/argo-helm
+  register: argo_repo
+  changed_when: "'has been added' in argo_repo.stdout"
+
+- name: Update Helm repositories
+  command: /usr/local/bin/helm repo update
+
+- name: Create ArgoCD namespace
+  command: kubectl create namespace argocd
+  register: create_ns
+  failed_when:
+    - create_ns.rc != 0
+    - "'already exists' not in create_ns.stderr"
+
+- name: Install ArgoCD via Helm
+  command: >
+    /usr/local/bin/helm upgrade --install argocd argo/argo-cd 
+    --namespace argocd 
+    --set server.service.type=NodePort
+
+- name: Wait for ArgoCD pods
+  command: kubectl wait --for=condition=Ready pods --all -n argocd --timeout=300s
+  ignore_errors: true

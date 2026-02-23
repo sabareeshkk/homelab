@@ -4,20 +4,65 @@
     path: /etc/containerd
     state: directory
 
+- name: Enable IPv4 forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    reload: yes
+
+- name: Load containerd and k8s modules
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - overlay
+    - br_netfilter
+
+- name: Ensure modules are loaded on boot
+  blockinfile:
+    path: /etc/modules-load.d/k8s.conf
+    create: yes
+    block: |
+      overlay
+      br_netfilter
+
+- name: Set bridge-nf-call-iptables to 1
+  sysctl:
+    name: "{{ item }}"
+    value: "1"
+    state: present
+    reload: yes
+  loop:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+
 - name: Install containerd
   apt:
     name: containerd
     state: present
 
+- name: Generate default containerd config
+  shell: containerd config default > /etc/containerd/config.toml
+  args:
+    creates: /etc/containerd/config.toml
+
+- name: Enable SystemdCgroup in containerd
+  replace:
+    path: /etc/containerd/config.toml
+    regexp: "SystemdCgroup = false"
+    replace: "SystemdCgroup = true"
+  notify: restart containerd
+
 - name: Add Kubernetes apt-key
   get_url:
-    url: https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key
+    url: https://pkgs.k8s.io/core:/stable:/v1.35/deb/Release.key
     dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
     mode: "0644"
 
 - name: Add Kubernetes apt repository
   apt_repository:
-    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /"
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /"
     state: present
     filename: kubernetes
 

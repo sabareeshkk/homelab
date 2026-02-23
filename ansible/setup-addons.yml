@@ -1,0 +1,6 @@
+---
+- name: Setup Addons on Master
+  hosts: master
+  become: yes
+  roles:
+    - addons

@@ -10,6 +10,12 @@
       - qemu-guest-agent
       - vim
       - net-tools
+      - conntrack
+      - socat
+      - gnupg
+      - lsb-release
+      - iptables
+      - iproute2
     state: present
 
 - name: Enable and start QEMU Guest Agent

@@ -1,0 +1,62 @@
+---
+- name: Check if Kubernetes is already initialized
+  stat:
+    path: /etc/kubernetes/admin.conf
+  register: kube_admin_conf
+
+- name: Initialize Kubernetes cluster
+  command: kubeadm init --pod-network-cidr=10.244.0.0/16
+  when: not kube_admin_conf.stat.exists
+  register: kubeadm_init
+
+- name: Create .kube directory
+  file:
+    path: /root/.kube
+    state: directory
+    mode: "0755"
+
+- name: Copy admin.conf to /root/.kube/config
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    remote_src: yes
+
+- name: Download Helm install script
+  get_url:
+    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: /tmp/get_helm.sh
+    mode: "0755"
+
+- name: Run Helm install script
+  command: /tmp/get_helm.sh
+  args:
+    creates: /usr/local/bin/helm
+
+- name: Add Flannel Helm repository
+  command: /usr/local/bin/helm repo add flannel https://flannel-io.github.io/flannel/
+  register: flannel_repo
+  changed_when: "'has been added' in flannel_repo.stdout"
+
+- name: Update Helm repositories
+  command: /usr/local/bin/helm repo update
+
+- name: Create kube-flannel namespace
+  command: kubectl create namespace kube-flannel
+  register: create_ns_flannel
+  failed_when:
+    - create_ns_flannel.rc != 0
+    - "'already exists' not in create_ns_flannel.stderr"
+
+- name: Install Flannel CNI via Helm
+  command: >
+    /usr/local/bin/helm upgrade --install flannel flannel/flannel
+    --namespace kube-flannel
+    --set podCidr="10.244.0.0/16"
+
+- name: Generate join command
+  command: kubeadm token create --print-join-command
+  register: join_command_raw
+
+- name: Set join command fact
+  set_fact:
+    join_command: "{{ join_command_raw.stdout }}"
