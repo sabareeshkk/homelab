@@ -16,6 +16,11 @@
   register: argo_repo
   changed_when: "'has been added' in argo_repo.stdout"
 
+- name: Add MetalLB Helm repository
+  command: /usr/local/bin/helm repo add metallb https://metallb.github.io/metallb
+  register: metallb_repo
+  changed_when: "'has been added' in metallb_repo.stdout"
+
 - name: Update Helm repositories
   command: /usr/local/bin/helm repo update
 
@@ -35,3 +40,15 @@
 - name: Wait for ArgoCD pods
   command: kubectl wait --for=condition=Ready pods --all -n argocd --timeout=300s
   ignore_errors: true
+
+- name: Create MetalLB namespace
+  command: kubectl create namespace metallb-system
+  register: create_ns_metallb
+  failed_when:
+    - create_ns_metallb.rc != 0
+    - "'already exists' not in create_ns_metallb.stderr"
+
+- name: Install MetalLB via Helm
+  command: >
+    /usr/local/bin/helm upgrade --install metallb metallb/metallb 
+    --namespace metallb-system
