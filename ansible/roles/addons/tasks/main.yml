@@ -1,54 +1,97 @@
 ---
-- name: Install Pip3
-  apt:
-    name: python3-pip
-    state: present
-
-- name: Install Python libraries for Kubernetes
-  apt:
-    name:
-      - python3-kubernetes
-      - python3-yaml
-    state: present
-
 - name: Add ArgoCD Helm repository
-  command: /usr/local/bin/helm repo add argo https://argoproj.github.io/argo-helm
-  register: argo_repo
-  changed_when: "'has been added' in argo_repo.stdout"
+  kubernetes.core.helm_repository:
+    name: argo
+    repo_url: https://argoproj.github.io/argo-helm
 
 - name: Add MetalLB Helm repository
-  command: /usr/local/bin/helm repo add metallb https://metallb.github.io/metallb
-  register: metallb_repo
-  changed_when: "'has been added' in metallb_repo.stdout"
+  kubernetes.core.helm_repository:
+    name: metallb
+    repo_url: https://metallb.github.io/metallb
 
-- name: Update Helm repositories
-  command: /usr/local/bin/helm repo update
+- name: Add Prometheus Community Helm repository
+  kubernetes.core.helm_repository:
+    name: prometheus-community
+    repo_url: https://prometheus-community.github.io/helm-charts
 
 - name: Create ArgoCD namespace
-  command: kubectl create namespace argocd
-  register: create_ns
-  failed_when:
-    - create_ns.rc != 0
-    - "'already exists' not in create_ns.stderr"
+  kubernetes.core.k8s:
+    name: argocd
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Create MetalLB namespace
+  kubernetes.core.k8s:
+    name: metallb-system
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Create Monitoring namespace
+  kubernetes.core.k8s:
+    name: monitoring
+    api_version: v1
+    kind: Namespace
+    state: present
 
 - name: Install ArgoCD via Helm
-  command: >
-    /usr/local/bin/helm upgrade --install argocd argo/argo-cd 
-    --namespace argocd 
-    --set server.service.type=NodePort
+  kubernetes.core.helm:
+    name: argocd
+    chart_ref: argo/argo-cd
+    release_namespace: argocd
+    values:
+      server:
+        service:
+          type: LoadBalancer
 
 - name: Wait for ArgoCD pods
   command: kubectl wait --for=condition=Ready pods --all -n argocd --timeout=300s
   ignore_errors: true
 
-- name: Create MetalLB namespace
-  command: kubectl create namespace metallb-system
-  register: create_ns_metallb
-  failed_when:
-    - create_ns_metallb.rc != 0
-    - "'already exists' not in create_ns_metallb.stderr"
-
 - name: Install MetalLB via Helm
-  command: >
-    /usr/local/bin/helm upgrade --install metallb metallb/metallb 
-    --namespace metallb-system
+  kubernetes.core.helm:
+    name: metallb
+    chart_ref: metallb/metallb
+    release_namespace: metallb-system
+
+- name: Wait for MetalLB pods to be ready
+  command: kubectl wait --for=condition=Ready pods --all -n metallb-system --timeout=300s
+  ignore_errors: true
+
+- name: Configure MetalLB IP Pool and L2 Advertisement
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      - apiVersion: metallb.io/v1beta1
+        kind: IPAddressPool
+        metadata:
+          name: default-pool
+          namespace: metallb-system
+        spec:
+          addresses:
+            - 101.101.0.130-101.101.0.149
+          autoAssign: true
+      - apiVersion: metallb.io/v1beta1
+        kind: L2Advertisement
+        metadata:
+          name: default-l2-advertisement
+          namespace: metallb-system
+        spec:
+          ipAddressPools:
+            - default-pool
+
+- name: Install Kube-Prometheus-Stack via Helm
+  kubernetes.core.helm:
+    name: prometheus
+    chart_ref: prometheus-community/kube-prometheus-stack
+    release_namespace: monitoring
+    values:
+      grafana:
+        service:
+          type: LoadBalancer
+        grafana.ini:
+          server:
+            domain: 101.101.0.131
+            root_url: "%(protocol)s://%(domain)s:%(http_port)s/"
+            serve_from_sub_path: true

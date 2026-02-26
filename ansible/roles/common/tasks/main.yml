@@ -16,6 +16,9 @@
       - lsb-release
       - iptables
       - iproute2
+      - python3-pip
+      - python3-kubernetes
+      - python3-yaml
     state: present
 
 - name: Enable and start QEMU Guest Agent

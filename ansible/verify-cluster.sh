@@ -51,6 +51,8 @@ echo -e "\n\033[1;33m---> Installed Addons <---\033[0m"
 check_status "ArgoCD Server Running" "kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server | grep -q 'Running'"
 check_status "MetalLB Controller Running" "kubectl get pods -n metallb-system -l app.kubernetes.io/component=controller | grep -q 'Running'"
 check_status "MetalLB Speaker Running" "kubectl get pods -n metallb-system -l app.kubernetes.io/component=speaker | grep -q 'Running'"
+check_status "Prometheus Server Running" "kubectl get pods -n monitoring -l app.kubernetes.io/name=prometheus | grep -q 'Running'"
+check_status "Grafana Running" "kubectl get pods -n monitoring -l app.kubernetes.io/name=grafana | grep -q 'Running'"
 
 echo -e "\n\033[1;36m=========================================\033[0m"
 echo -e "\033[1;36m              Verification Complete        \033[0m"
