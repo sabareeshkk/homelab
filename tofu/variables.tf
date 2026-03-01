@@ -39,6 +39,14 @@ variable "vm_nodes" {
       ip_address  = "101.101.0.102/24"
       target_node = "mercury"
     }
+    "worker-03" = {
+      name        = "k8s-worker-03"
+      vm_id       = 9004
+      cpu_cores   = 2
+      memory      = 4096
+      ip_address  = "101.101.0.103/24"
+      target_node = "earth"
+    }
   }
 }
 
@@ -55,7 +63,7 @@ variable "vm_user" {
 }
 
 variable "ssh_public_key_path" {
-  type = string
+  type        = string
   description = "The ssh public key path"
-  default = "~/.ssh/id_rsa.pub"
+  default     = "~/.ssh/id_rsa.pub"
 }

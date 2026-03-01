@@ -42,7 +42,7 @@ check_status() {
 }
 
 echo -e "\033[1;33m---> Core Cluster Components <---\033[0m"
-check_status "All 3 Nodes are Ready" "[[ \$(kubectl get nodes | grep -w 'Ready' | wc -l) -eq 3 ]]"
+check_status "All 4 Nodes are Ready" "[[ \$(kubectl get nodes | grep -w 'Ready' | wc -l) -eq 4 ]]"
 check_status "Flannel CNI Running" "kubectl get pods -n kube-flannel | grep -q 'Running'"
 check_status "CoreDNS Running" "kubectl get pods -n kube-system -l k8s-app=kube-dns | grep -q 'Running'"
 check_status "Kube-Proxy Running" "kubectl get pods -n kube-system -l k8s-app=kube-proxy | grep -q 'Running'"
