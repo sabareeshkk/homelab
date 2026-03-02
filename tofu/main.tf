@@ -31,6 +31,7 @@ resource "proxmox_virtual_environment_vm" "nodes" {
 
   memory {
     dedicated = each.value.memory
+    floating  = each.value.memory
   }
 
   # Root disk from cloud image

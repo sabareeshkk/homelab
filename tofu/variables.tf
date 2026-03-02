@@ -23,29 +23,45 @@ variable "vm_nodes" {
       ip_address  = "101.101.0.100/24"
       target_node = "venus"
     }
-    "worker-01" = {
-      name        = "k8s-worker-01"
+    "master-02" = {
+      name        = "k8s-master-02"
       vm_id       = 9002
       cpu_cores   = 2
       memory      = 4096
       ip_address  = "101.101.0.101/24"
       target_node = "mars"
     }
-    "worker-02" = {
-      name        = "k8s-worker-02"
+    "master-03" = {
+      name        = "k8s-master-03"
       vm_id       = 9003
       cpu_cores   = 2
       memory      = 4096
       ip_address  = "101.101.0.102/24"
       target_node = "mercury"
     }
-    "worker-03" = {
-      name        = "k8s-worker-03"
+    "worker-01" = {
+      name        = "k8s-worker-01"
       vm_id       = 9004
       cpu_cores   = 2
       memory      = 4096
       ip_address  = "101.101.0.103/24"
       target_node = "earth"
+    }
+    "worker-02" = {
+      name        = "k8s-worker-02"
+      vm_id       = 9005
+      cpu_cores   = 2
+      memory      = 4096
+      ip_address  = "101.101.0.104/24"
+      target_node = "venus"
+    }
+    "worker-03" = {
+      name        = "k8s-worker-03"
+      vm_id       = 9006
+      cpu_cores   = 2
+      memory      = 4096
+      ip_address  = "101.101.0.105/24"
+      target_node = "mars"
     }
   }
 }
