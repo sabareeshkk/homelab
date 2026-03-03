@@ -10,7 +10,9 @@ It consists of two main components:
 
 - **Proxmox VE**: The hypervisor to run the virtual machines.
 - **VM OS**: Ubuntu 24.04 (Noble Numbat) using cloud-init images.
-- **Kubernetes Cluster**: 1 Master node (`101.101.0.100`), 2 Worker nodes (`101.101.0.101`, `101.101.0.102`).
+- **Kubernetes Cluster**: 3 Master nodes and 3 Worker nodes.
+- **High Availability**: Managed by `kube-vip` for the Control Plane VIP.
+- **Node IPs**: `101.101.0.100` (VIP), `101.101.0.1..106` (Physical Nodes).
 
 ## Components Breakdown
 
@@ -29,20 +31,42 @@ tofu plan -var-file=terraform.tfvars
 tofu apply -var-file=terraform.tfvars
 ```
 
-### 2. Ansible Configuration (`ansible/`)
-The `ansible/` directory contains Ansible roles and playbooks to configure the provisioned VMs. 
+### 2. Kubernetes Configuration (`ansible/`)
+The `ansible/` directory contains playbooks to configure the VMs and manage the cluster lifecycle.
 
-* **`init-cluster.yml` / `setup-k8s.yml`**: Initializes and configures the Kubernetes cluster.
-* **`setup-addons.yml`**: Installs essential add-ons (including Helm and ArgoCD on the master node).
-* Uses `inventory.ini` to define the target machines logically based on the static IPs assigned in OpenTofu.
+* **`setup-k8s.yml`**: Provisions a Highly Available (HA) cluster with 3 Master nodes and 3 Worker nodes using `kube-vip` for Control Plane HA.
+* **`setup-addons.yml`**: Installs base infrastructure:
+  - **ArgoCD**: The GitOps engine managing all cluster state.
+  - **MetalLB**: Provides LoadBalancer IP addresses for services.
+  - **Envoy Gateway**: Modern Gateway API implementation for routing.
+  - **Kube-Prometheus-Stack**: Monitoring and observability (Prometheus & Grafana).
 
-**Usage:**
-```bash
-cd ansible
-ansible-playbook -i inventory.ini setup-k8s.yml
+## Service Access
+
+The cluster uses a mix of direct LoadBalancers (for management) and a Gateway Proxy (for applications).
+
+| Service | Access URL | Method | IP Address |
+|---------|------------|--------|------------|
+| **ArgoCD** | https://argocd.homelab.local | Direct LB | `101.101.0.130` |
+| **Grafana** | http://grafana.homelab.local | Envoy Gateway | `101.101.0.132` |
+
+### Local DNS Setup
+To access these services from your machine, add the following to your `/etc/hosts`:
+```text
+101.101.0.132 grafana.homelab.local
+101.101.0.130 argocd.homelab.local
 ```
 
+## GitOps Workflow
+
+This project follows a GitOps pattern using ArgoCD. Application manifests are located in `kubernetes/argocd-apps/`.
+
+1. **Modify** manifests in the `kubernetes/` directory.
+2. **Push** changes to the `main` branch.
+3. **ArgoCD** automatically detects and applies changes to the cluster.
+
 ## Prerequisites
-- **OpenTofu**: Installed locally (a Terraform-compatible command-line tool).
-- **Ansible**: Installed locally.
-- **Proxmox**: A running Proxmox VE server with an API token set up and stored in `secrets.txt` or `.tfvars`.
+- **OpenTofu**: Installed locally for VM provisioning.
+- **Ansible**: Installed locally for cluster setup.
+- **Proxmox**: Running VE server with API access.
+
