@@ -3,16 +3,9 @@
   kubernetes.core.helm_repository:
     name: argo
     repo_url: https://argoproj.github.io/argo-helm
-
-- name: Add MetalLB Helm repository
-  kubernetes.core.helm_repository:
-    name: metallb
-    repo_url: https://metallb.github.io/metallb
-
-- name: Add Prometheus Community Helm repository
-  kubernetes.core.helm_repository:
-    name: prometheus-community
-    repo_url: https://prometheus-community.github.io/helm-charts
+  delegate_to: localhost
+  become: false
+  run_once: true
 
 - name: Create ArgoCD namespace
   kubernetes.core.k8s:
@@ -20,20 +13,9 @@
     api_version: v1
     kind: Namespace
     state: present
-
-- name: Create MetalLB namespace
-  kubernetes.core.k8s:
-    name: metallb-system
-    api_version: v1
-    kind: Namespace
-    state: present
-
-- name: Create Monitoring namespace
-  kubernetes.core.k8s:
-    name: monitoring
-    api_version: v1
-    kind: Namespace
-    state: present
+  delegate_to: localhost
+  become: false
+  run_once: true
 
 - name: Install ArgoCD via Helm
   kubernetes.core.helm:
@@ -44,54 +26,19 @@
       server:
         service:
           type: LoadBalancer
+  delegate_to: localhost
+  become: false
+  run_once: true
 
 - name: Wait for ArgoCD pods
   command: kubectl wait --for=condition=Ready pods --all -n argocd --timeout=300s
   ignore_errors: true
+  delegate_to: localhost
+  become: false
+  run_once: true
 
-- name: Install MetalLB via Helm
-  kubernetes.core.helm:
-    name: metallb
-    chart_ref: metallb/metallb
-    release_namespace: metallb-system
-
-- name: Wait for MetalLB pods to be ready
-  command: kubectl wait --for=condition=Ready pods --all -n metallb-system --timeout=300s
-  ignore_errors: true
-
-- name: Configure MetalLB IP Pool and L2 Advertisement
-  kubernetes.core.k8s:
-    state: present
-    definition:
-      - apiVersion: metallb.io/v1beta1
-        kind: IPAddressPool
-        metadata:
-          name: default-pool
-          namespace: metallb-system
-        spec:
-          addresses:
-            - 101.101.0.130-101.101.0.149
-          autoAssign: true
-      - apiVersion: metallb.io/v1beta1
-        kind: L2Advertisement
-        metadata:
-          name: default-l2-advertisement
-          namespace: metallb-system
-        spec:
-          ipAddressPools:
-            - default-pool
-
-- name: Install Kube-Prometheus-Stack via Helm
-  kubernetes.core.helm:
-    name: prometheus
-    chart_ref: prometheus-community/kube-prometheus-stack
-    release_namespace: monitoring
-    values:
-      grafana:
-        service:
-          type: LoadBalancer
-        grafana.ini:
-          server:
-            domain: 101.101.0.131
-            root_url: "%(protocol)s://%(domain)s:%(http_port)s/"
-            serve_from_sub_path: true
+- name: Apply ArgoCD Applications
+  command: kubectl apply -f /Users/watermelon/Curiosity/proxmox/homelab/kubernetes/argocd-apps/
+  delegate_to: localhost
+  become: false
+  run_once: true

@@ -1,0 +1,38 @@
+---
+- name: Reset Kubernetes nodes
+  hosts: k8s_nodes
+  become: yes
+  tasks:
+    - name: Run kubeadm reset
+      command: kubeadm reset -f
+      register: kubeadm_reset
+      failed_when: kubeadm_reset.rc != 0 and 'kubeadm command not found' not in kubeadm_reset.stderr
+      ignore_errors: true
+
+    - name: Remove Kubernetes config directory
+      file:
+        path: /etc/kubernetes
+        state: absent
+
+    - name: Remove user kubeconfig
+      file:
+        path: "{{ lookup('env', 'HOME') }}/.kube/config"
+        state: absent
+      delegate_to: localhost
+      run_once: true
+
+    - name: Remove CNI network configuration
+      file:
+        path: /etc/cni/net.d
+        state: absent
+
+    - name: Remove containerd state
+      file:
+        path: /var/lib/containerd
+        state: absent
+
+    - name: Restart containerd to clear state
+      systemd:
+        name: containerd
+        state: restarted
+      ignore_errors: true
