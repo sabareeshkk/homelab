@@ -118,7 +118,7 @@ func main() {
 		defer resp.Body.Close()
 
 		body, _ := io.ReadAll(resp.Body)
-		fmt.Fprintf(w, "Service A received response from Service B: %s", string(body))
+		fmt.Fprintf(w, "[v2] Service A received response from Service B: %s", string(body))
 	})
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
