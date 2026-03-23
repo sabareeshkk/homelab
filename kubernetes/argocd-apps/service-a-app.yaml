@@ -1,16 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: microservices-stack
+  name: service-a
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/sabareeshkk/homelab.git
     targetRevision: main
-    path: kubernetes/manifests
-    directory:
-      recurse: true
+    path: kubernetes/manifests/apps/service-a
   destination:
     server: https://kubernetes.default.svc
     namespace: default
