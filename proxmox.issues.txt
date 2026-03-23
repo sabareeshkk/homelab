@@ -1,0 +1,11 @@
+/etc/network/interfaces
+
+iface nic0 inet manual
+        # The Fix: Disable hardware offloading that causes the "Unit Hang"
+        post-up /usr/sbin/ethtool -K nic0 tso off gso off gro off
+
+ethtool -K nic0 tso off gso off gro off
+
+/etc/default/grub
+pcie_aspm=off e1000e.SmartPowerDownEnable=0
+update-grub
