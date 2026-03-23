@@ -9,6 +9,8 @@ spec:
     repoURL: https://github.com/sabareeshkk/homelab.git
     targetRevision: main
     path: kubernetes/manifests
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: default
