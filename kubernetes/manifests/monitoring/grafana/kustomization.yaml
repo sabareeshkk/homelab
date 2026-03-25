@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Ensure every resource generated gets this required label
+labels:
+  - pairs:
+      grafana_dashboard: "1"
+
+# Generate the ConfigMap directly from the JSON file
+configMapGenerator:
+  - name: grafana-dashboard-microservices
+    namespace: monitoring
+    files:
+      - microservices-dashboard.json=dashboard-microservices.json
+
+# Tell Kubernetes not to append a random hash string (e.g. -6fgh32) to the end of the ConfigMap name
+generatorOptions:
+  disableNameSuffixHash: true

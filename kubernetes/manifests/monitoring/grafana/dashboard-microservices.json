@@ -1,0 +1,50 @@
+{
+  "title": "Microservices Telemetry",
+  "tags": ["homelab", "microservices"],
+  "timezone": "browser",
+  "schemaVersion": 30,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Service A - Incoming Requests (Rate)",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "sum(rate(service_a_requests_total[1m]))",
+          "legendFormat": "Requests / Minute"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 20
+          }
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Service B - Database Access (Rate)",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "sum(rate(service_b_data_access_total[1m]))",
+          "legendFormat": "DB Queries / Minute"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 60
+          }
+        }
+      }
+    }
+  ]
+}
